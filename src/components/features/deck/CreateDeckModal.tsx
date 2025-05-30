@@ -19,9 +19,9 @@ export default function CreateDeckModal({ isOpen, onClose }: CreateDeckModalProp
     },
     {
       title: 'Create from PDF',
-      description: 'Upload a PDF to automatically generate flashcards',
+      description: 'Upload a PDF and let AI generate flashcards',
       icon: FileText,
-      href: '/create-deck-pdf'
+      href: '/create/pdf'
     }
   ]
 

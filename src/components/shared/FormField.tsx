@@ -2,51 +2,54 @@
 
 import { ChangeEvent } from 'react'
 
-interface FormFieldProps {
+interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
   label: string
-  type?: string
-  value: string
-  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
   multiline?: boolean
   rows?: number
-  required?: boolean
-  placeholder?: string
 }
 
 export function FormField({
   label,
-  type = 'text',
-  value,
-  onChange,
   multiline = false,
   rows = 3,
-  required = false,
-  placeholder,
+  className = '',
+  required,
+  ...props
 }: FormFieldProps) {
-  const baseClasses = 'block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black sm:text-sm'
+  const inputClasses = `
+    w-full
+    px-3
+    py-2
+    border
+    border-gray-300
+    rounded-md
+    shadow-sm
+    focus:outline-none
+    focus:ring-2
+    focus:ring-black
+    focus:border-transparent
+    disabled:bg-gray-100
+    disabled:cursor-not-allowed
+    ${className}
+  `
 
   return (
-    <div>
+    <div className="w-full">
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
-        {!required && <span className="text-gray-400 text-xs ml-1">(optional)</span>}
+        {required && <span className="text-red-500 ml-1">*</span>}
       </label>
+      
       {multiline ? (
         <textarea
-          value={value}
-          onChange={onChange}
           rows={rows}
-          className={baseClasses}
-          placeholder={placeholder}
+          className={inputClasses}
+          {...(props as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
         />
       ) : (
         <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className={baseClasses}
-          placeholder={placeholder}
+          className={inputClasses}
+          {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
         />
       )}
     </div>
