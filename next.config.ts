@@ -12,6 +12,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/create-deck-manual',
+        destination: '/create',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;
