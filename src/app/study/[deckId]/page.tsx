@@ -1,5 +1,6 @@
 "use client"
 
+import { use } from 'react';
 import FlashcardContainer from '@/components/features/study/FlashcardContainer'
 
 // This is temporary sample data - will be replaced with actual data from API
@@ -22,15 +23,27 @@ const sampleCards = [
 ]
 
 interface StudyPageProps {
-  params: {
+  params: Promise<{
     deckId: string
-  }
+  }>
 }
 
 export default function StudyPage({ params }: StudyPageProps) {
+  const { deckId } = use(params);
+
+  if (!deckId) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-600">
+          Deck ID not found
+        </div>
+      </div>
+    );
+  }
+
   return (
     <FlashcardContainer 
-      deckId={params.deckId}
+      deckId={deckId}
       cards={sampleCards}
     />
   )
