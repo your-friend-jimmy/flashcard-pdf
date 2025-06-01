@@ -72,6 +72,7 @@ export const config = {
     '/create-deck-from-pdf',
     '/dashboard',
     '/profile',
-    '/settings'
+    '/settings',
+    '/test/decks'
   ]
 } 

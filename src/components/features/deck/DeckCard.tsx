@@ -1,49 +1,86 @@
 "use client"
 
-import { Trash2 } from 'lucide-react'
-import Link from 'next/link'
+import { type Deck } from '@/lib/types/deck';
+import { useState } from 'react';
+import { deleteDeck } from '@/app/actions/deck';
+import Link from 'next/link';
 
 interface DeckCardProps {
-  id: string
-  title: string
-  description: string
-  cardCount: number
-  onDelete: (id: string) => void
+  deck: Deck;
+  onDelete?: () => void;
 }
 
-export default function DeckCard({
-  id,
-  title,
-  description,
-  cardCount,
-  onDelete
-}: DeckCardProps) {
+export function DeckCard({ deck, onDelete }: DeckCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this deck?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const result = await deleteDeck(deck.id);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        onDelete?.();
+      }
+    } catch (err) {
+      setError('Failed to delete deck');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-      <div className="p-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="mt-1 text-sm text-gray-500">{description}</p>
-          </div>
-          <button
-            onClick={() => onDelete(id)}
-            className="text-gray-400 hover:text-gray-500"
-            aria-label="Delete deck"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            {deck.title}
+          </h3>
+          {deck.description && (
+            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+              {deck.description}
+            </p>
+          )}
         </div>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm text-gray-500">{cardCount} cards</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {deck.cardCount} cards
+        </span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <div className="space-x-2">
           <Link
-            href={`/study/${id}`}
-            className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+            href={`/study/${deck.id}`}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Study
           </Link>
+          <Link
+            href={`/decks/${deck.id}/edit`}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          >
+            Edit
+          </Link>
         </div>
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+        >
+          {isDeleting ? 'Deleting...' : 'Delete'}
+        </button>
       </div>
+
+      {error && (
+        <p className="mt-2 text-sm text-red-600 dark:text-red-500">{error}</p>
+      )}
     </div>
-  )
+  );
 } 
