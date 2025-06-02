@@ -6,6 +6,7 @@ interface StudyPageProps {
   }
 }
 
-export default function StudyPage({ params }: StudyPageProps) {
-  return <StudyPageClient deckId={params.deckId} />
+export default async function StudyPage({ params }: StudyPageProps) {
+  const deckId = await Promise.resolve(params.deckId)
+  return <StudyPageClient deckId={deckId} />
 } 

@@ -42,6 +42,7 @@ export default function FlashcardContainer({ deckId, cards }: FlashcardContainer
   }
 
   const handleBack = () => {
+    router.refresh()
     router.push('/')
   }
 

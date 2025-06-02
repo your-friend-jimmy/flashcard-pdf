@@ -1,35 +1,22 @@
-"use client"
-
-import { useState } from 'react'
 import Container from '@/components/layout/Container'
 import DeckList from '@/components/features/deck/DeckList'
-import CreateDeckModal from '@/components/features/deck/CreateDeckModal'
-import { type Deck } from '@/lib/types/deck'
+import { createClient } from '@/lib/supabase/server'
 
-export default function Home() {
-  const [decks, setDecks] = useState<Deck[]>([])
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-
-  const handleDeleteDeck = (id: string) => {
-    setDecks(decks.filter(deck => deck.id !== id))
-  }
+export default async function Home() {
+  const supabase = createClient()
+  
+  const { data: decks } = await supabase
+    .from('decks')
+    .select('*')
+    .order('created_at', { ascending: false })
 
   return (
     <main className="py-8">
       <Container>
         <div className="space-y-8">
-          <DeckList 
-            decks={decks} 
-            onDeleteDeck={handleDeleteDeck} 
-            onCreateClick={() => setIsCreateModalOpen(true)}
-          />
+          <DeckList decks={decks || []} />
         </div>
       </Container>
-
-      <CreateDeckModal 
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
     </main>
   )
 }

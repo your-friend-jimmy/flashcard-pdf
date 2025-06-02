@@ -1,16 +1,24 @@
 "use client"
 
+import { useState } from 'react';
 import { DeckCard } from './DeckCard';
-import Link from 'next/link';
 import { type Deck } from '@/lib/types/deck';
+import CreateDeckModal from './CreateDeckModal';
+import { useRouter } from 'next/navigation';
 
 interface DeckListProps {
   decks: Deck[];
-  onDeleteDeck: (id: string) => void;
-  onCreateClick: () => void;
 }
 
-export default function DeckList({ decks, onDeleteDeck, onCreateClick }: DeckListProps) {
+export default function DeckList({ decks }: DeckListProps) {
+  const router = useRouter();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleDeleteDeck = async (id: string) => {
+    // The actual deletion is handled in DeckCard component
+    router.refresh(); // This will trigger a re-fetch of the decks
+  };
+
   if (!decks?.length) {
     return (
       <div className="text-center py-12">
@@ -22,7 +30,7 @@ export default function DeckList({ decks, onDeleteDeck, onCreateClick }: DeckLis
         </p>
         <div className="mt-6">
           <button
-            onClick={onCreateClick}
+            onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Create a deck
@@ -33,10 +41,21 @@ export default function DeckList({ decks, onDeleteDeck, onCreateClick }: DeckLis
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {decks.map((deck) => (
-        <DeckCard key={deck.id} deck={deck} onDelete={() => onDeleteDeck(deck.id)} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {decks.map((deck) => (
+          <DeckCard 
+            key={deck.id} 
+            deck={deck} 
+            onDelete={() => handleDeleteDeck(deck.id)} 
+          />
+        ))}
+      </div>
+
+      <CreateDeckModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+    </>
   );
 } 
