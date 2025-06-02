@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/shared/Button';
 import { FormField } from '@/components/shared/FormField';
 import { createClient } from '@/lib/supabase/client';
+import { createDeck } from '@/app/actions/deck';
 
 interface FlashCard {
   id: string;
@@ -13,8 +14,9 @@ interface FlashCard {
 }
 
 interface DeckFormData {
-  name: string;
+  title: string;
   description: string;
+  isPublic: boolean;
   cards: FlashCard[];
 }
 
@@ -26,8 +28,9 @@ export function DeckCreationForm() {
   const [userId, setUserId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<DeckFormData>({
-    name: '',
+    title: '',
     description: '',
+    isPublic: false,
     cards: []
   });
 
@@ -82,7 +85,6 @@ export function DeckCreationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent double submission
     if (isSubmitting) return;
     
     setError(null);
@@ -95,49 +97,35 @@ export function DeckCreationForm() {
     }
 
     try {
+      // Create the deck using the server action
+      const { deck, error: deckError } = await createDeck({
+        title: formData.title,
+        description: formData.description,
+        isPublic: formData.isPublic
+      });
+
+      if (deckError || !deck) {
+        throw new Error(deckError || 'Failed to create deck');
+      }
+
+      // Create cards using Supabase client
       const supabase = createClient();
-      
-      const deckData = {
-        name: formData.name,
-        description: formData.description || null,
-        user_id: userId
-      };
-
-      // First create the deck
-      const deckResponse = await supabase
-        .from('decks')
-        .insert(deckData)
-        .select()
-        .single();
-
-      if (deckResponse.error) {
-        throw new Error(`Failed to create deck: ${deckResponse.error.message}`);
-      }
-
-      const deck = deckResponse.data;
-      if (!deck) {
-        throw new Error('No deck was created');
-      }
-
-      // Prepare card data
       const cardData = formData.cards.map(card => ({
         deck_id: deck.id,
         question: card.question,
         answer: card.answer
       }));
 
-      // Then create all the cards for this deck
-      const cardsResponse = await supabase
+      const { error: cardsError } = await supabase
         .from('cards')
-        .insert(cardData)
-        .select();
+        .insert(cardData);
 
-      if (cardsResponse.error) {
-        throw new Error(`Failed to create cards: ${cardsResponse.error.message}`);
+      if (cardsError) {
+        throw new Error(`Failed to create cards: ${cardsError.message}`);
       }
 
-      // Navigate to home page
-      router.replace('/');
+      // Navigate to decks page
+      router.replace('/decks');
     } catch (err) {
       console.error('Error creating deck:', err);
       setError(err instanceof Error ? err.message : 'Failed to create deck. Please try again.');
@@ -179,8 +167,8 @@ export function DeckCreationForm() {
           label="Deck Name"
           type="text"
           required
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
         />
 
         <FormField
@@ -190,6 +178,22 @@ export function DeckCreationForm() {
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
         />
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="isPublic"
+            checked={formData.isPublic}
+            onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label
+            htmlFor="isPublic"
+            className="ml-2 block text-sm text-gray-700 dark:text-gray-200"
+          >
+            Make this deck public
+          </label>
+        </div>
       </div>
 
       {/* Flashcard Input Section */}
@@ -243,7 +247,7 @@ export function DeckCreationForm() {
       <Button
         type="submit"
         isLoading={isSubmitting}
-        disabled={formData.cards.length === 0 || !formData.name}
+        disabled={formData.cards.length === 0 || !formData.title}
         className="w-full"
       >
         Create Deck

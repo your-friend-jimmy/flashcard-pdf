@@ -27,7 +27,7 @@ export default function StudyPageClient({ deckId }: StudyPageClientProps) {
         // First verify the deck exists and user has access
         const { data: deck, error: deckError } = await supabase
           .from('decks')
-          .select('id, name')
+          .select('id, title')
           .eq('id', deckId)
           .single();
 

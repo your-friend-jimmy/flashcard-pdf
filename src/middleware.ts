@@ -15,19 +15,23 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         get(name: string) {
-          return request.cookies.get(name)?.value
+          const cookie = request.cookies.get(name)
+          return cookie?.value
         },
         set(name: string, value: string, options: CookieOptions) {
+          // Set cookie on the request
           request.cookies.set({
             name,
             value,
             ...options,
           })
+          // Create a new response with updated headers
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           })
+          // Set cookie on the response
           response.cookies.set({
             name,
             value,
@@ -35,36 +39,39 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          // Remove cookie from the request
+          request.cookies.delete(name)
+          // Create a new response with updated headers
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          // Remove cookie from the response
+          response.cookies.delete(name)
         },
       },
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
+    if (!session) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/auth/signin'
+      redirectUrl.searchParams.set(`redirectedFrom`, request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    return response
+  } catch (error) {
+    console.error('Auth error:', error)
+    // In case of auth error, redirect to signin
     const redirectUrl = request.nextUrl.clone()
     redirectUrl.pathname = '/auth/signin'
-    redirectUrl.searchParams.set(`redirectedFrom`, request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
-
-  return response
 }
 
 export const config = {
@@ -72,6 +79,7 @@ export const config = {
     '/create-deck-from-pdf',
     '/dashboard',
     '/profile',
-    '/settings'
+    '/settings',
+    '/test/decks'
   ]
 } 
