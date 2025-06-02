@@ -50,36 +50,30 @@ export function DeckCard({ deck, onDelete }: DeckCardProps) {
           )}
         </div>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {deck.cardCount} cards
+          {deck.card_count} cards
         </span>
       </div>
 
       <div className="flex justify-between items-center">
-        <div className="space-x-2">
-          <Link
-            href={`/study/${deck.id}`}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Study
-          </Link>
-          <Link
-            href={`/decks/${deck.id}/edit`}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-          >
-            Edit
-          </Link>
-        </div>
+        <Link
+          href={`/study/${deck.id}`}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Study
+        </Link>
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+          className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
         >
           {isDeleting ? 'Deleting...' : 'Delete'}
         </button>
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-500">{error}</p>
+        <div className="mt-4 text-sm text-red-600">
+          {error}
+        </div>
       )}
     </div>
   );

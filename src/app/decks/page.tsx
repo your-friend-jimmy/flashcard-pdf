@@ -1,26 +1,40 @@
-import { DeckList } from '@/components/features/deck/DeckList';
-import Link from 'next/link';
-import { Suspense } from 'react';
+"use client"
 
-export const metadata = {
-  title: 'My Decks',
-  description: 'Manage your flashcard decks',
-};
+import DeckList from '@/components/features/deck/DeckList';
+import CreateDeckModal from '@/components/features/deck/CreateDeckModal';
+import { Suspense, useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { type Deck } from '@/lib/types/deck';
 
 export default function DecksPage() {
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchDecks = async () => {
+      const supabase = createClient();
+      const { data: decksData, error } = await supabase
+        .from('decks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && decksData) {
+        setDecks(decksData);
+      }
+    };
+
+    fetchDecks();
+  }, []);
+
+  const handleDeleteDeck = (id: string) => {
+    setDecks(decks.filter(deck => deck.id !== id));
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          My Decks
-        </h1>
-        <Link
-          href="/decks/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Create a deck
-        </Link>
-      </div>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+        My Decks
+      </h1>
 
       <Suspense
         fallback={
@@ -41,8 +55,17 @@ export default function DecksPage() {
           </div>
         }
       >
-        <DeckList />
+        <DeckList 
+          decks={decks} 
+          onDeleteDeck={handleDeleteDeck} 
+          onCreateClick={() => setIsCreateModalOpen(true)}
+        />
       </Suspense>
+
+      <CreateDeckModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 } 
